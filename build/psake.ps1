@@ -1,5 +1,6 @@
 # Properties passed from command line
-Properties {   
+Properties {
+	$SkipTests = $false
     $TestTags = @('PSCI.unit','PSCI.integration')
 }
 
@@ -22,10 +23,14 @@ Task Init {
     Set-Location $ProjectRoot
     "Build System Details:"
     Get-Item ENV:BH*
+	"SkipTests: $SkipTests, TestTags: $TestTags"
     "`n"
 }
 
 Task Test {
+    if ($SkipTests) {
+		return
+	}
     $lines
        
     $paths = @(

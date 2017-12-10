@@ -1,3 +1,5 @@
+param([switch]$SkipTests)
+
 $Global:ErrorActionPreference = 'Stop'
 $Global:VerbosePreference = 'SilentlyContinue'
 
@@ -53,5 +55,9 @@ else {
 "Setting build environment"
 Set-BuildEnvironment -Path "$PSScriptRoot\.." -Force
 "Starting psake build"
-Invoke-psake -buildFile "$PSScriptRoot\psake.ps1" -nologo
+$psakeParams = @{}
+if ($SkipTests) {
+  $psakeParams.SkipTests = $true
+}
+Invoke-psake -buildFile "$PSScriptRoot\psake.ps1" -nologo -properties $psakeParams
 exit ( [int]( -not $psake.build_success ) )
