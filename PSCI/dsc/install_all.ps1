@@ -23,5 +23,5 @@ SOFTWARE.
 #>
 
 $Global:ErrorActionPreference = 'Stop'
-Import-Module "$PSScriptRoot\..\..\..\PSCI.psd1" -Force
+Import-Module "$PSScriptRoot\..\PSCI.psd1" -Force
 Install-DSCResources -ModuleNames 'all'
