@@ -149,7 +149,7 @@ function Invoke-MsBuild {
 
     if ($VisualStudioVersion) {
         $vsVersion = Map-VisualStudioYearToVersion -Year $VisualStudioVersion
-        $cmd += " /p:VisualStudioVersion=`"${vsVersion}`""
+        $cmd += " /p:VisualStudioVersion=$vsVersion"
     }
 
     # maxcpucount - use all available cpus

@@ -71,7 +71,7 @@ function Get-LatestVisualStudioPath {
     } else{
         $arguments = $commonArguments + @("-latest")
     }
-echo $arguments
+
     $vsPath = & $path $arguments
 
     if(!$vsPath) {
