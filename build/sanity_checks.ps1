@@ -26,7 +26,7 @@ $licenseText = @"
 <#
 The MIT License (MIT)
 `
-Copyright (c) 2015 Objectivity Bespoke Software Specialists
+Copyright (c) 20?? Objectivity Bespoke Software Specialists
 `
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -45,11 +45,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-#>
+#>*
 "@ -replace "`r`n", "`n" -replace "`n", [Environment]::NewLine
-
-# we additionally accept different years
-$licenseTexts = @($licenseText, ($licenseText -replace '2015', '2016'), ($licenseText -replace '2015', '2017'))
 
 $customSources = Get-ChildItem -Path "$PSScriptRoot\..\PSCI" -File -Filter "*.ps*1" -Recurse | 
                  Select-Object -ExpandProperty FullName |
@@ -62,12 +59,10 @@ $tabsNotMatching = New-Object -TypeName System.Collections.ArrayList
 foreach ($file in $customSources) {
     $content = Get-Content -Path $file -ReadCount 0 | Out-String
     $licenseTextOk = $false
-    foreach ($acceptedLicenseText in $licenseTexts) { 
-        if ($content.StartsWith($acceptedLicenseText)) {
-            $licenseTextOk = $true
-            break
-        }
-    }
+	if ($content -like $licenseText) {
+		$licenseTextOk = $true
+		break
+	}
     if (!$licenseTextOk) {
         [void]($licenseNotMatching.Add($file))
     }
