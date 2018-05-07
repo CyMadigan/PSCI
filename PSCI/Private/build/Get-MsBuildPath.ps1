@@ -48,17 +48,17 @@ function Get-MsBuildPath {
     [OutputType([string])]
     param(
         [Parameter(Mandatory=$false)]
-        [string] 
+        [string]
         [ValidateSet("2017", "2015","2013","2012","2010","2008", "")]
         $VisualStudioVersion,
 
         [Parameter(Mandatory=$false)]
-        [string] 
+        [string]
         [ValidateSet("15.0","14.0","12.0","4.0","3.5","2.0","")]
         $MsBuildVersion,
 
         [Parameter(Mandatory=$false)]
-        [string] 
+        [string]
         [ValidateSet("x86","x64","")]
         $ForceArchitecture
     )
@@ -80,16 +80,10 @@ function Get-MsBuildPath {
         $versions = @($MsBuildVersion)
     }
 
-    foreach ($version in $versions) 
+    foreach ($version in $versions)
     {
-        if ($version -eq "15.0") {
-            
-            $configPaths = Get-ConfigurationPaths
-            $nugetPackagesPath = $configPaths.DeployScriptsPath + '\packages'
-            
-            Install-NugetPackage -PackageId vswhere -OutputDirectory $nugetPackagesPath -ExcludeVersionInOutput
-            $path = & "$nugetPackagesPath\vswhere\tools\vswhere.exe" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
-           
+        if ($version -ge "15.0") {
+            $path = Get-LatestVisualStudioPath
             if ($path) {
                 $path = join-path $path 'MSBuild\15.0\Bin\'
             }
@@ -112,9 +106,9 @@ function Get-MsBuildPath {
             }
             if (Test-Path -LiteralPath $msBuildPath) {
                 return $msBuildPath
-            }    
+            }
         }
-    } 
+    }
 
     return $null
 }

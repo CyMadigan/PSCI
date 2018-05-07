@@ -44,7 +44,7 @@ function Invoke-Devenv {
         [string]
         [ValidateSet('', '2015', '2013', '2012', '2010')]
         $VisualStudioVersion,
-        
+
         [Parameter(Mandatory=$true)]
         [string]
         $ArgumentList
@@ -59,13 +59,8 @@ function Invoke-Devenv {
         }
         $vsDir = $vsDirs[0]
     } else {
-        $vsVersionMap = @{ 
-            '2010' = '10.0'
-            '2012' = '11.0'
-            '2013' = '12.0'
-            '2015' = '14.0'
-        }
-        $vsDir = "$baseVsDir\Microsoft Visual Studio {0}" -f $vsVersionMap[$VisualStudioVersion]
+        $vsVersion = Map-VisualStudioYearToVersion -Year $VisualStudioVersion
+        $vsDir = "$baseVsDir\Microsoft Visual Studio {0}" -f $vsVersion
         if (!(Test-Path -LiteralPath $vsDir)) {
             throw "Cannot find Visual Studio directory at '$vsDir'. You probably don't have Visual Studio $VisualStudioVersion installed. Please install it and try again."
         }
@@ -76,5 +71,5 @@ function Invoke-Devenv {
         throw "Cannot find '$devEnvPath'."
     }
 
-    [void](Start-ExternalProcess -Command $devEnvPath -ArgumentList $ArgumentList)    
+    [void](Start-ExternalProcess -Command $devEnvPath -ArgumentList $ArgumentList)
 }

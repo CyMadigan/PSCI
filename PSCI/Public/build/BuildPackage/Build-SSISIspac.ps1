@@ -23,53 +23,53 @@ SOFTWARE.
 #>
 
 function Build-SSISIspac {
-     <#
-    .SYNOPSIS
-    Builds an .ispac package containing SSIS .dtsx packages (SQL Server 2012 or newer).
+    <#
+   .SYNOPSIS
+   Builds an .ispac package containing SSIS .dtsx packages (SQL Server 2012 or newer).
 
-    .DESCRIPTION
-    It runs Visual Studio's devenv.com to build the .ispac, validates it completes successfully and copies the .ispac to OutputPath.
+   .DESCRIPTION
+   It runs Visual Studio's devenv.com to build the .ispac, validates it completes successfully and copies the .ispac to OutputPath.
 
-    .PARAMETER PackageName
-    Name of the package. It determines OutputPath if it's not provided.
+   .PARAMETER PackageName
+   Name of the package. It determines OutputPath if it's not provided.
 
-    .PARAMETER ProjectPath
-    Path to the root folder containing SSIS packages.
+   .PARAMETER ProjectPath
+   Path to the root folder containing SSIS packages.
 
-    .PARAMETER Configuration
-    Configuration to use for building the .ispac file.
+   .PARAMETER Configuration
+   Configuration to use for building the .ispac file.
 
-    .PARAMETER VisualStudioVersion
-    Visual Studio version to run. If empty, the newest installed in the system will be used.
+   .PARAMETER VisualStudioVersion
+   Visual Studio version to run. If empty, the newest installed in the system will be used.
 
-    .PARAMETER OutputPath
-    Output path where the package will be created. If not provided, $OutputPath = $PackagesPath\$PackageName, where $PackagesPath is taken from global variable.
+   .PARAMETER OutputPath
+   Output path where the package will be created. If not provided, $OutputPath = $PackagesPath\$PackageName, where $PackagesPath is taken from global variable.
 
-    .EXAMPLE
-    Build-SSISIspac -PackageName 'ETL' -ProjectPath 'path\etl.sln' -Configuration 'Development' -VisualStudioVersion 2012 
-    
-    #>
+   .EXAMPLE
+   Build-SSISIspac -PackageName 'ETL' -ProjectPath 'path\etl.sln' -Configuration 'Development' -VisualStudioVersion 2012
+
+   #>
     [CmdletBinding()]
     [OutputType([void])]
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]
         $PackageName,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]
         $ProjectPath,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]
         $Configuration = 'Release',
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]
-        [ValidateSet('', '2015', '2013', '2012', '2010')]
+        [ValidateSet('', '2017', '2015', '2013', '2012', '2010')]
         $VisualStudioVersion,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]
         $OutputPath
     )
@@ -80,36 +80,28 @@ function Build-SSISIspac {
     $projectRootPath = (Get-ConfigurationPaths).ProjectRootPath
 
     $projectPath = Resolve-PathRelativeToProjectRoot `
-                        -Path $projectPath `
-                        -DefaultPath (Join-Path -Path $projectRootPath -ChildPath "$packageName\${packageName}.sln") `
-                        -ErrorMsg "Project file '$projectPath' does not exist (package '$packageName'). Tried following absolute path: '{0}'."
+        -Path $projectPath `
+        -DefaultPath (Join-Path -Path $projectRootPath -ChildPath "$packageName\${packageName}.sln") `
+        -ErrorMsg "Project file '$projectPath' does not exist (package '$packageName'). Tried following absolute path: '{0}'."
 
     $OutputPath = Resolve-PathRelativeToProjectRoot `
-                            -Path $OutputPath `
-                            -DefaultPath (Join-Path -Path $configPaths.PackagesPath -ChildPath $PackageName) `
-                            -CheckExistence:$false
-    
-    $baseVsDir = Get-ProgramFilesx86Path
+        -Path $OutputPath `
+        -DefaultPath (Join-Path -Path $configPaths.PackagesPath -ChildPath $PackageName) `
+        -CheckExistence:$false
+
+    # finds VS installation directory
     if (!$VisualStudioVersion) {
-        $wildcard = "$baseVsDir\Microsoft Visual Studio*"
-        $vsDirs = Get-ChildItem -Path $wildcard -Directory | Sort -Descending
-        if (!$vsDirs) {
-            throw "Cannot find Visual Studio directory at '$wildcard'. You probably don't have 'Microsoft SQL Server Data Tools - Business Intelligence for Visual Studio'. Please install it and try again."
-        }
-        $vsDir = $vsDirs[0]
-    } else {
-        $vsVersionMap = @{ 
-            '2010' = '10.0'
-            '2012' = '11.0'
-            '2013' = '12.0'
-            '2015' = '14.0'
-        }
-        $vsDir = "$baseVsDir\Microsoft Visual Studio {0}" -f $vsVersionMap[$VisualStudioVersion]
-        if (!(Test-Path -LiteralPath $vsDir)) {
-            throw "Cannot find Visual Studio directory at '$vsDir'. you probably don't have 'Microsoft SQL Server Data Tools - Business Intelligence for Visual Studio $VisualStudioVersion'. Please install it and try again."
-        }
+        $vsDir = Get-LatestVisualStudioPath
+    }
+    else {
+        $vsDir = Get-LatestVisualStudioPath -Version $VisualStudioVersion
     }
 
+    if (!(Test-Path -LiteralPath $vsDir)) {
+        throw "Cannot find Visual Studio directory at '$vsDir'. you probably don't have 'Microsoft SQL Server Data Tools - Business Intelligence for Visual Studio $VisualStudioVersion'. Please install it and try again."
+    }
+
+    # builds project using VS version found
     $devEnvPath = Join-Path -Path $vsDir -ChildPath 'Common7\IDE\devenv.com'
     if (!(Test-Path -LiteralPath $devEnvPath)) {
         throw "Cannot find '$devEnvPath'."
@@ -127,7 +119,8 @@ function Build-SSISIspac {
                 $migrationReportContents = [IO.File]::ReadAllText($migrationReportPath)
                 if ($migrationReportContents -imatch '(?ms)<body>.*</body>') {
                     Write-Log -Warn "Migration report contents: `n$($Matches[0])"
-                } else { 
+                }
+                else {
                     Write-Log -Warn "Migration report contents: `n$migrationReportContents"
                 }
                 if ($migrationReportContents -imatch 'The application which this project type is based on was not found') {
@@ -137,7 +130,8 @@ function Build-SSISIspac {
         }
         if ($ssdtMissingError) {
             throw "Building failed - you probably don't have 'Microsoft SQL Server Data Tools - Business Intelligence for Visual Studio $VisualStudioVersion'. Please install it and try again."
-        } else { 
+        }
+        else {
             throw "Building failed - see errors above for details. "
         }
     }

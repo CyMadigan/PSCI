@@ -148,15 +148,7 @@ function Invoke-MsBuild {
     }
 
     if ($VisualStudioVersion) {
-        $vsVersionMap = @{ `
-            "2008" = "9.0"; `
-            "2010" = "10.0"; `
-            "2012" = "11.0"; `
-            "2013" = "12.0"; `
-            "2015" = "14.0"; `
-            "2017" = "15.0"
-        }
-        $vsVersion = $vsVersionMap[$VisualStudioVersion]
+        $vsVersion = Map-VisualStudioYearToVersion -Year $VisualStudioVersion
         $cmd += " /p:VisualStudioVersion=`"${vsVersion}`""
     }
 
