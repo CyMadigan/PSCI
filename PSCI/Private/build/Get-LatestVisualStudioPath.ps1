@@ -68,6 +68,7 @@ function Get-LatestVisualStudioPath {
         $versionNext = ($vsVersion + 1).ToString("0.0", [cultureinfo]::InvariantCulture)
         $range = "[$versionCurrent, $versionNext)"
         $arguments = $commonArguments + @("-version", $range)
+        $arguments = $arguments + @("-all")
     } else{
         $arguments = $commonArguments + @("-latest")
     }
