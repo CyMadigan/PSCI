@@ -97,7 +97,7 @@ function Build-SSISIspac {
         $vsDir = Get-LatestVisualStudioPath -Version $VisualStudioVersion
     }
 
-    if (!(Test-Path -LiteralPath $vsDir)) {
+    if (!$vsDir -or !(Test-Path -LiteralPath $vsDir)) {
         throw "Cannot find Visual Studio directory at '$vsDir'. you probably don't have 'Microsoft SQL Server Data Tools - Business Intelligence for Visual Studio $VisualStudioVersion'. Please install it and try again."
     }
 

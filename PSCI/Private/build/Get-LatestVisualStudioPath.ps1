@@ -82,7 +82,12 @@ function Get-LatestVisualStudioPath {
         if (!$vsDirs) {
             throw "Cannot find Visual Studio directory at '$wildcard'. You probably don't have 'Microsoft SQL Server Data Tools - Business Intelligence for Visual Studio'. Please install it and try again."
         }
-        $vsPath = $vsDirs[0].FullName
+
+        if($Version) {
+            $vsPath = $vsDirs | Where-Object -Property Name -Like "* $versionCurrent" | Select-Object -First 1
+        } else {
+            $vsPath = $vsDirs[0].FullName
+        }
     }
 
     return $vsPath
