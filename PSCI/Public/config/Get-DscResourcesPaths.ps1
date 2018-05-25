@@ -41,7 +41,7 @@ function Get-DscResourcesPaths {
     [OutputType([object[]])]
     param(
         [Parameter(Mandatory=$false)]
-        [string[]] 
+        [string[]]
         $ModuleNames
     )
 
@@ -49,15 +49,15 @@ function Get-DscResourcesPaths {
         return
     }
 
-    $result = New-Object System.Collections.ArrayList    
+    $result = New-Object System.Collections.ArrayList
     $baseDscDir = Join-Path -Path (Get-PSCIModulePath) -ChildPath "dsc"
     # note: $Env:ProgramFiles gives Program Files (x86) if running Powershell x86...
     $baseDestPath = Join-Path -Path 'C:\Program Files' -ChildPath 'WindowsPowerShell\Modules'
     $isAll = ($ModuleNames.Count -eq 1 -and $ModuleNames[0] -ieq 'all')
 
-    $versionReplaceRegex = '\.[0-9]\..*$'
-    
-    if ((Test-Path -LiteralPath (Join-Path -Path $baseDscDir -ChildPath 'ext'))) { 
+    $versionReplaceRegex = '\.[0-9]+\..*$'
+
+    if ((Test-Path -LiteralPath (Join-Path -Path $baseDscDir -ChildPath 'ext'))) {
         $modulesExternal = @(Join-Path -Path $baseDscDir -ChildPath 'ext\*\*' | Get-ChildItem -Directory)
         if (!$isAll) {
             $modulesExternal = @($modulesExternal | Where-Object { $ModuleNames -icontains ($_.Name -replace $versionReplaceRegex, '') })
@@ -71,7 +71,7 @@ function Get-DscResourcesPaths {
     }
 
     $foundModules = ($modulesExternal + $modulesCustom) | Sort -Property Name
-    if (!$isAll) { 
+    if (!$isAll) {
         if ($foundModules.Count -lt $ModuleNames.Count) {
             $missingModules = ($ModuleNames | Where { ($foundModules.Name -replace $versionReplaceRegex, '') -inotcontains $_ }) -join ', '
             throw "Cannot find following modules under '$baseDscDir': $missingModules."
@@ -90,5 +90,5 @@ function Get-DscResourcesPaths {
     }
 
     return ,($result)
-   
+
 }
