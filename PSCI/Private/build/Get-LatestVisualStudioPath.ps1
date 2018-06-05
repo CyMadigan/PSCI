@@ -48,9 +48,10 @@ function Get-LatestVisualStudioPath {
 
     # check if VS2017 is installed with vswhere
     $vswherePath = Join-Path -Path $baseVsDir -ChildPath "Microsoft Visual Studio\Installer\vswhere.exe"
-    if(Test-Path $vswherePath) {
+    if (Test-Path $vswherePath) {
         $path = $vswherePath
-    } else {
+    }
+    else {
         # download vswhere from NuGet
         $configPaths = Get-ConfigurationPaths
         $nugetPackagesPath = $configPaths.DeployScriptsPath + '\packages'
@@ -59,23 +60,24 @@ function Get-LatestVisualStudioPath {
     }
 
     $commonArguments = @("-products", "*",
-                         "-requires", "Microsoft.Component.MSBuild",
-                         "-property", "installationPath"
+        "-requires", "Microsoft.Component.MSBuild",
+        "-property", "installationPath"
     )
-    if($Version) {
+    if ($Version) {
         $vsVersion = [float] (Map-VisualStudioYearToVersion -Year $Version)
         $versionCurrent = $vsVersion.ToString("0.0", [cultureinfo]::InvariantCulture)
         $versionNext = ($vsVersion + 1).ToString("0.0", [cultureinfo]::InvariantCulture)
         $range = "[$versionCurrent, $versionNext)"
         $arguments = $commonArguments + @("-version", $range)
         $arguments = $arguments + @("-all")
-    } else{
+    }
+    else {
         $arguments = $commonArguments + @("-latest")
     }
 
     $vsPath = & $path $arguments
 
-    if(!$vsPath) {
+    if (!$vsPath) {
         # fallback to older versions
         $wildcard = "$baseVsDir\Microsoft Visual Studio*"
         $vsDirs = Get-ChildItem -Path $wildcard -Directory | Sort-Object -Descending
@@ -83,11 +85,18 @@ function Get-LatestVisualStudioPath {
             throw "Cannot find Visual Studio directory at '$wildcard'. You probably don't have 'Microsoft SQL Server Data Tools - Business Intelligence for Visual Studio'. Please install it and try again."
         }
 
-        if($Version) {
+        if ($Version) {
             $vsPath = $vsDirs | Where-Object -Property Name -Like "* $versionCurrent" | Select-Object -First 1
-        } else {
+        }
+        else {
             $vsPath = $vsDirs[0].FullName
         }
+    }
+
+    if ($vsPath -is [array]) {
+        $paths = $vsPath -join "`n"
+        Write-Warning -Message "Multiple matching Visual Studio versions found:`n$paths`nUsing the first one..."
+        $vsPath = $vsPath | Select-Object -First 1
     }
 
     return $vsPath
