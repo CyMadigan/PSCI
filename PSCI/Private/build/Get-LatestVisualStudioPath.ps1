@@ -44,6 +44,13 @@ function Get-LatestVisualStudioPath {
         $Version
     )
 
+    $requiredProductIds = @(
+        'Microsoft.VisualStudio.Product.BuildTools',
+        'Microsoft.VisualStudio.Product.Enterprise',
+        'Microsoft.VisualStudio.Product.Professional',
+        'Microsoft.VisualStudio.Product.Community'
+        )
+
     $baseVsDir = Get-ProgramFilesx86Path
 
     # check if VS2017 is installed with vswhere
@@ -59,10 +66,12 @@ function Get-LatestVisualStudioPath {
         $path = "$nugetPackagesPath\vswhere\tools\vswhere.exe"
     }
 
-    $commonArguments = @("-products", "*",
-        "-requires", "Microsoft.Component.MSBuild",
-        "-property", "installationPath"
+    $commonArguments = @("-requires", "Microsoft.Component.MSBuild",
+        "-property", "installationPath",
+        "-products"
     )
+    $commonArguments += $requiredProductIds
+
     if ($Version) {
         $vsVersion = [float] (Map-VisualStudioYearToVersion -Year $Version)
         $versionCurrent = $vsVersion.ToString("0.0", [cultureinfo]::InvariantCulture)
